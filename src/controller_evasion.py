@@ -3,17 +3,24 @@
 
 import rospy
 from ottocar_msgs.msg import Obstacle
+import base_trajectory
 
 
 class Controller_Evasion():
-    def __init__(self):
+
+
+
+   def __init__(self):
         print "cntroller_evasion started"
-        rospy.Subscriber("/sw/sensors/fusion/obstacle",Obstacle,obstacle_callback)
-        rate = rospy.Rate(20)
-        while not rospy.is_shutdown():
-            rate.sleep()
-        rospy.spin()
-    def obstacle_callback(Obstacle):
+        rospy.Subscriber("/sw/sensors/fusion/obstacle", Obstacle, self.obstacle_callback())
+
+       # rate = rospy.Rate(20)
+       # while not rospy.is_shutdown():
+            #rate.sleep()
+
+
+      #rospy.spin()
+   def obstacle_callback(Obstacle):
         pass
 
 if __name__ == '__main__':
