@@ -3,10 +3,10 @@
 
 import rospy
 from ottocar_msgs.msg import Obstacle
-import base_trajectory
+import basetrajectory
 
 
-class ControllerEvasion():
+class ControllerEvasion:
     def __init__(self):
 
         print "cntroller_evasion started"
@@ -20,16 +20,12 @@ class ControllerEvasion():
         self.last_speed = None
         self.last_state= None
         self.last_offset=None
-
-
         self.spin()
 
-    def obstacle_callback(self, msg):
-       pass
-       #with self.lock:
-               #ToDo
-
-
+    # def obstacle_callback(self, msg):
+    #
+    #    #with self.lock:
+    #            #ToDo pass
     def spin(self):
         with self.lock:
             while not rospy.is_shutdown() and self.running:
@@ -42,7 +38,6 @@ class ControllerEvasion():
                     self.last_speed = speed
                     self.last_state=state
                     self.last_offset=offset
-
                     #ToDo
                     speed = None
                     self.publish(angle, speed, offset , state)
@@ -57,9 +52,6 @@ class ControllerEvasion():
         self.pub_speed.publish(data = speed)
         self.pub_offset_change(data=offset)
         self.pub_state(data=state)
-
-
-
 
 if __name__ == '__main__':
     rospy.init_node('controller_evasion')
