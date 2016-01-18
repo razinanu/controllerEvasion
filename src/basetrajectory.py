@@ -31,7 +31,7 @@ class BaseTrajectory:
     -------
     trajectory : array
     """
-    def lane_change_trajectory(self, config, start_point, fraction, step):
+    def lane_change_base_trajectory(self, config, start_point, fraction, step):
 
         lateral_length = config[0]
         velocity = config[1]
@@ -53,7 +53,7 @@ class BaseTrajectory:
             if np.abs(longitudinal/2-i) < self.inflection_error and j < 2:
                 inflection_point[j, 0] = trajectory[c, 0]
                 inflection_point[j, 1] = trajectory[c, 1]
-               # print "inflection x: ",self.inflection_point[j, 0], "inflection y: ", self.inflection_point[j, 1]
+           # print "inflection x: ",self.inflection_point[j, 0], "inflection y: ", self.inflection_point[j, 1]
                 j += 1
 
             if(np.abs(trajectory[c, 1]-trajectory[c-1, 1]) < self.flat_error) and c > 0:
@@ -62,15 +62,31 @@ class BaseTrajectory:
                 flat_part[t, 1] = trajectory[c, 1]
                 t += 1
             c += 1
-        plt.plot(trajectory[:, 0], trajectory[:, 1], 'r')
-        plt.plot(inflection_point[:, 0], inflection_point[:, 1], 'go')
-        plt.plot(flat_part[:, 0], flat_part[:, 1], 'bo')
+        # plt.plot(trajectory[:, 0], trajectory[:, 1], 'r')
+        # plt.plot(inflection_point[:, 0], inflection_point[:, 1], 'go')
+        # plt.plot(flat_part[:, 0], flat_part[:, 1], 'bo')
         return trajectory
 
+    def find_flat_part(self, tajectory):
+
+        flat_point = np.array([0, 0], dtype=float)
+
+        for i in range(0, trajectory.shape[0]):
+            if np.abs(trajectory[i, 1]-trajectory[i+1, 1]) > self.flat_error:
+                flat_point[0] = trajectory[i, 0]
+                print "x t :", trajectory[i, 0]
+                flat_point[1] = trajectory[i, 1]
+                print "x is ", flat_point[0]
+                print "y is ", flat_point[1]
+                break
+        return flat_point
 if __name__ == '__main__':
 
     conf = np.array([0.4, 3, 2])
-    trajectory = BaseTrajectory().lane_change_trajectory(conf, 0, 1, 300)
+    trajectory = BaseTrajectory().lane_change_base_trajectory(conf, 0, 1, 300)
+    plt.plot(trajectory[:, 0], trajectory[:, 1], 'r')
+    flat_point = BaseTrajectory().find_flat_part(trajectory)
+    plt.plot(flat_point[0], flat_point[1], 'go')
     plt.show()
 
 
