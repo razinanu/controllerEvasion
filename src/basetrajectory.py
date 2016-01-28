@@ -6,24 +6,11 @@ import matplotlib.pyplot as plt
 
 
 class BaseTrajectory:
-    """
-    Parameters
-    ----------
-    trajectory_config : array
-    config[0] : lateral_length
-    the lateral length of trajectory
-    config[1] : velocity
-    config[2] : lateral_acceleration
-    maximum lateral Acceleration of vehicle
-    """
-    def __init__(self, trajectory_config):
+
+    def __init__(self):
 
         self.inflection_error = 0.005
         self.flat_error = 0.001
-        self.lateral_length = trajectory_config[0]
-        self.velocity = trajectory_config[1]
-        self.lateral_acceleration = trajectory_config[2]
-        self.longitudinal = self.velocity * (math.sqrt((math.pi * self.lateral_length) / self.lateral_acceleration))
     """
     Parameters
     ----------
@@ -39,22 +26,22 @@ class BaseTrajectory:
     -------
     trajectory : array
     """
-    def lane_change_base_trajectory(self, start_point, fraction, step):
-
+    def test_lane_change_base_trajectory(self, start_point, fraction, step, trajectory_config):
+        longitudinal = trajectory_config[1] * (math.sqrt((math.pi * trajectory_config[0]) /trajectory_config[2]))
         inflection_point = np.zeros(shape=(2, 2), dtype=float)
         flat_part = np.zeros(shape=(1, 2), dtype=float)
         trajectory = np.zeros(shape=(step, 2), dtype=float)
-        y = self.lateral_length / 2 * np.pi
-        z = (2 * np.pi) / self.longitudinal
+        y = trajectory_config[0] / 2 * np.pi
+        z = (2 * np.pi) / longitudinal
         c = 0
         j = 0
         t = 0
         """ start_point of trajetory  """
-        for i in np.linspace(self.longitudinal*start_point, self.longitudinal*fraction, step):
+        for i in np.linspace(longitudinal*start_point, longitudinal*fraction, step):
             trajectory[c, 0] = i
             trajectory[c, 1] = y*z*i - y * np.sin(z * i)
 
-            if np.abs(self.longitudinal/2-i) < self.inflection_error and j < 2:
+            if np.abs(longitudinal/2-i) < self.inflection_error and j < 2:
                 inflection_point[j, 0] = trajectory[c, 0]
                 inflection_point[j, 1] = trajectory[c, 1]
                 j += 1
@@ -65,38 +52,74 @@ class BaseTrajectory:
                 flat_part[t, 1] = trajectory[c, 1]
                 t += 1
             c += 1
-        #
-        #  plt.plot(trajectory[:, 0], trajectory[:, 1], 'r')
-        # plt.plot(inflection_point[:, 0], inflection_point[:, 1], 'go')
-        # plt.plot(flat_part[:, 0], flat_part[:, 1], 'bo')
+
         return trajectory
+    """
+    Parameters
+    ----------
+    x_start : array
+       initial position of x and y.
+    trajectory_config : array
+    config[0] : float
+        the lateral length of trajectory.
+    config[1] : float
+        velocity
+    config[2] : float
+        maximum lateral Acceleration of vehicle.
+    step : integer
+        Number of samples to generate.
+    dt : float
+        Size of spacing between samples
+    Returns
+    -------
+    trajectory : array
+    """
+    def lane_change_base_trajectory(self, x_start, traj_config, step,dt):
 
-    def trajectory_function(self, x):
-            y = self.lateral_length / 2 * np.pi
-            z = (2 * np.pi) / self.longitudinal
-            function = y*z*x - y * np.sin(z * x)
-            plt.plot(x, function, 'r')
-            return function
+        longitudinal_length = traj_config[1] * (math.sqrt((math.pi * traj_config[0]) / traj_config[2]))
+        y = traj_config[0] / 2 * np.pi
+        z = (2 * np.pi) / longitudinal_length
+        max_step = self.get_max_step(traj_config,dt)
+        steps = max_step if max_step < step else step
+        # store trajectory
+        traj = np.zeros(shape=(steps+1, 2))
+        # set start point
+        traj[0, :] = x_start
 
-    def find_flat_part(self, trajectory):
+        for i in xrange(1, steps+1):
+            traj[i, :] = np.array(self.traj_fcn(traj[i-1, :], dt, y, z))
+
+        return traj
+
+    def get_max_step(self, traj_config, dt):
+
+        longitudinal_length = traj_config[1] * (math.sqrt((math.pi * traj_config[0]) / traj_config[2]))
+
+        return int(longitudinal_length/dt)
+
+    def traj_fcn(self, x, delta_t, y, z):
+
+        x0 = x[0] + delta_t
+        x1 = y*z*x0 - y * np.sin(z * x0)
+        return [x0, x1]
+
+    def find_flat_part(self, test_trajectory):
 
         flat_point = np.array([0, 0], dtype=float)
 
-        for i in range(0, trajectory.shape[0]):
-            if np.abs(trajectory[i, 1]-trajectory[i+1, 1]) > self.flat_error:
-                flat_point[0] = trajectory[i, 0]
-                flat_point[1] = trajectory[i, 1]
+        for i in range(0, test_trajectory.shape[0]):
+            if np.abs(test_trajectory[i, 1]-test_trajectory[i+1, 1]) > self.flat_error:
+                flat_point[0] = test_trajectory[i, 0]
+                flat_point[1] = test_trajectory[i, 1]
 
                 break
         return flat_point
 if __name__ == '__main__':
 
-    conf = np.array([0.4, 3, 2])
-    trajectory = BaseTrajectory(conf).lane_change_base_trajectory(0, 1, 300)
-    plt.plot(trajectory[:, 0], trajectory[:, 1], 'r')
-    plt.show()
-    x = np.linspace(0, BaseTrajectory(conf).longitudinal)
-    BaseTrajectory(conf).trajectory_function(x)
+    trajectory_conf = np.array([0.4, 3, 2])
+    conf_start = np.array([0, 0])
+    trajectory = BaseTrajectory().lane_change_base_trajectory(conf_start, trajectory_conf, 800000, 0.00001)
+    plt.plot(trajectory[:,0],trajectory[:,1], 'g')
     plt.show()
 
 
