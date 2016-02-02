@@ -72,15 +72,8 @@ class Trajectory:
 
         plt.plot(bestTryjectory[:, 0], bestTryjectory[:, 1], 'bo')
         return solution
-if __name__ == '__main__':
 
-    conf = np.array([0.4, 3, 2])
-    #base_trajectory = basetrajectory.BaseTrajectory(conf).lane_change_base_trajectory(0, 0.5, 300)
-    #flat_point = basetrajectory.BaseTrajectory(conf).find_flat_part(base_trajectory)
-    conf_start = np.array([0, 0, 0, 0, 0, 1, 0])
-    #u=(0.35, 22.5)
-    solution = Trajectory(conf).lane_change_trajectory(conf_start, 0, 5)
 
-    plt.show()
+
 
 
