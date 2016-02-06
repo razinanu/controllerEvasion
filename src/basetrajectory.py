@@ -134,7 +134,7 @@ if __name__ == '__main__':
     conf_start = np.array([0, 0, 0])
     trajectory = BaseTrajectory(trajectory_conf, 0.01).lane_change_base_trajectory(conf_start, False)
     plt.plot(trajectory[:, 0], trajectory[:, 1], 'r')
-    conf_start = trajectory[-1,:3]
+    conf_start = trajectory[-1, :3]
     trajectory = BaseTrajectory(trajectory_conf, 0.01).lane_change_base_trajectory(conf_start, True)
     plt.plot(trajectory[:, 0], trajectory[:, 1], 'g')
     plt.show()

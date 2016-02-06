@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 
 class Controller(ParticleFilter):
-    def __init__(self, NewModel, num_particles=5):
+    def __init__(self, NewModel, isSecondeHalf, num_particles=5):
 
         self.model = NewModel()
         # steer and speed
@@ -25,30 +25,26 @@ class Controller(ParticleFilter):
 
         # TODO max velocity
         # TODO min steer for lane-change and merging
-        self.bounds = np.array([[-1, 0], [0.1, 1.5]])
+        if isSecondeHalf:
+            self.bounds = np.array([[0, 1], [0.1, 1.5]])
+        else:
+            self.bounds = np.array([[-1, 0], [1, 1.5]])
 
-        #     # initialize particle filter
+
+        # initialize particle filter
         super(Controller, self).__init__(num_particles, x_dim, self.populate_fun,
                                          self.particle_propagation_fun, self.likelihood_fun,
                                          self.propagation_noise, self.observation_noise)
 
-    def control(self, trajectory, current_velocity, current_yaw_rate, dt, lateral_offset, long_offset, tjc_fraction,current_longitual_velocity=0,
-                num_iterations=20):
+    def control(self, trajectory, model_conf, dt, lateral_offset, long_offset, num_iterations=20):
 
         self.lateral_offset = lateral_offset
         self.long_offset = long_offset
-        self.fraction = tjc_fraction
         self.dt = dt
         self.steps = trajectory.shape[0]
         self.trajectory = trajectory
-        self.solve_args = [
-            trajectory[0, 0],  # start x
-            trajectory[0, 1],  # start y
-            trajectory[0, 2],  # start orientation
-            current_velocity,  # start velocity
-            current_longitual_velocity,  # start longitual velocity
-            current_yaw_rate,  # start yaw rate
-        ]
+
+        self.solve_args = model_conf
 
         # it may be useful to NOT reinitialize all particles, if you want to follow a trajectory
         # because the last particle distribution is a good guess for the next
@@ -62,12 +58,29 @@ class Controller(ParticleFilter):
             self.update_weights()
 
         # get estimated values from particle distribution
+
         steer, speed = self.weighted_parameters()
 
-        # if steer > 0 :
-        #     print steer
+        real_solution = self._solve(steer, speed)
+        #plt.plot(solution[:, 0], solution[:, 1], 'bo')
 
-        return steer, speed
+        solution = self._resample_solution(real_solution)
+        plt.plot(solution[:, 0], solution[:, 1], 'ro')
+
+        print "final position x: ", solution[-1, 0], "final position y: ", solution[-1, 1]
+        size = solution.shape[0]
+        x_0 = solution[int(size/2), 0]
+        y_0 = solution[int(size/2), 1]
+        x_1 = solution[int(size/2)+1, 0]
+        y_1 = solution[int(size/2)+1, 1]
+        dx = x_1-x_0
+        dy = y_1-y_0
+        alpha = np.arctan2(dy, dx)
+        v_x = speed * np.cos(alpha)
+        time = solution[-1, 0] / v_x
+        print "speed", speed, "steer", steer, "time", time
+
+        return steer, speed, time
 
     def weighted_parameters(self):
 
@@ -82,16 +95,13 @@ class Controller(ParticleFilter):
         resampled = np.zeros_like(trajectory)
 
         for k, x in enumerate(self.trajectory[:, 0]):
-            # print "x is: ",x
+
             if x <= np.max(solution[:, 0]) and x >= np.min(solution[:, 0]):
-                # print "max, min", np.max(solution[:,0]),  np.min(solution[:,0])
+
                 resampled[k, 0] = x
-                # print "y is: ", trajectory[k, 1], interp_y(x)
                 resampled[k, 1] = interp_y(x)
                 resampled[k, 2] = interp_orientation(x)
-                # print "r is: ", trajectory[k, 2], interp_orientation(x)
-                # else:
-                #     print x,k
+
 
         return resampled
 
@@ -110,7 +120,7 @@ class Controller(ParticleFilter):
 
         # clip particles that are outside of parameter search space
         particles = np.clip(particles, self.bounds[:, 0], self.bounds[:, 1])
-        # print particles
+
         return particles
 
     def propagate(self):
@@ -125,6 +135,8 @@ class Controller(ParticleFilter):
         return weights
 
     def _solve(self, steer, speed):
+
+        self.solve_args[3] = speed
         solution = self.model.solve(
             self.steps,
             self.dt,
@@ -134,10 +146,10 @@ class Controller(ParticleFilter):
         return solution
 
     def calc_distance(self, xy):
+
         dxy = np.diff(xy, axis=0)
-        # print dxy
         ds = np.sum(dxy ** 2, axis=1) ** 0.5
-        # print ds
+
 
         return np.sum(ds)
 
@@ -157,9 +169,9 @@ class Controller(ParticleFilter):
         diff = self.trajectory - solution
         distances_squared = (np.square(diff[:, 0]) + np.square(diff[:, 1]))
 
-        upper_bound_y = (self.fraction * self.lateral_offset) + 0.1
-        lower_bound_y = self.fraction * 0.2
-        upper_bound_x = self.fraction * self.long_offset + 0.1
+        upper_bound_y = (self.lateral_offset) + 0.1
+        lower_bound_y = 0.15
+        upper_bound_x = self.long_offset + 0.1
 
         if lateral_distance < upper_bound_y and lateral_distance > lower_bound_y \
                 and long_distance < upper_bound_x:
@@ -172,25 +184,12 @@ class Controller(ParticleFilter):
 
 if __name__ == '__main__':
 
-    controller = Controller(NewModel)
-    trajectory_conf = np.array([0.4, 1.5, 2])
+    controller = Controller(NewModel, False)
+    trajectory_conf = np.array([0.5, 1.5, 2])
     conf_start = np.array([0, 0, 0])
-    max_step = basetrajectory.BaseTrajectory(trajectory_conf, 0.01).max_step
-    long_offset=basetrajectory.BaseTrajectory(trajectory_conf,0.01).longitudinal_length
-
-    trajectory = basetrajectory.BaseTrajectory(trajectory_conf, 0.01).lane_change_base_trajectory(conf_start,int(max_step / 2))
+    conf_model = np.array([0, 0, 0, 0, 0, 0], dtype="float")
+    long_offset = basetrajectory.BaseTrajectory(trajectory_conf, 0.01).longitudinal_length/2
+    trajectory = basetrajectory.BaseTrajectory(trajectory_conf, 0.01).lane_change_base_trajectory(conf_start, False)
+    steer, speed, time = controller.control(trajectory, conf_model, 0.01, 0.2, long_offset)
     plt.plot(trajectory[:, 0], trajectory[:, 1], 'g')
-
-    #i = 0
-    #while i < 19:
-    steer, speed = controller.control(trajectory, 1.5, 0, 0.01, 0.4,long_offset,0.5)
-    solution = NewModel().solve(trajectory.shape[0], 0.01, steer, speed, trajectory[0, 0], trajectory[0, 1],
-                                trajectory[0, 2], 1.5, 0, 0)
-    # print "steer,speed",steer,speed
-    solution = controller._resample_solution(solution)
-
-    plt.plot(solution[:, 0], solution[:, 1], 'ko')
-    plt.plot(trajectory[:, 0], trajectory[:, 1], 'g')
-        #i += 1
-
     plt.show()
