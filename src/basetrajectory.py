@@ -24,10 +24,10 @@ class BaseTrajectory:
         self.longitudinal_length = traj_config[1] * (math.sqrt((2*math.pi * traj_config[0]) / traj_config[2]))
         self.first_const = traj_config[0] / (2 * np.pi)
         self.second_const = (2 * np.pi) / self.longitudinal_length
-        self.max_step = int(self.longitudinal_length/dt)
-        self.dt=dt
+        self.max_step = int((0.5 * self.longitudinal_length)/dt)
+        self.dt = dt
         #TODO set the actuell velocity
-        self.velocity= traj_config[1]
+        self.velocity = traj_config[1]
 
     '''
     Parameters
@@ -85,18 +85,18 @@ class BaseTrajectory:
     -------
     trajectory : array
     """
-    def lane_change_base_trajectory(self, x_start, step):
+    def lane_change_base_trajectory(self, x_start, isSecond):
 
 
-        steps = self.max_step if self.max_step < step else step
+        steps = self.max_step
         # store trajectory
         traj = np.zeros(shape=(steps+1, 3))
         # set start point
         traj[0, :] = x_start
-
-
         for i in xrange(1, steps+1):
             traj[i, :] = np.array(self.traj_fcn(traj[i-1, :], self.dt, self.first_const, self.second_const))
+        if isSecond:
+            traj = self.second_half(traj)
         return traj
 
     def traj_fcn(self, x, delta_t, y, z):
@@ -106,6 +106,16 @@ class BaseTrajectory:
         dy = x1 - x[1]
         x2 = np.arctan2(dy, delta_t)
         return [x0, x1, x2]
+
+    def second_half(self, trajectory):
+
+        offset_x = trajectory[0, 0]
+        offset_y = trajectory[0, 1]
+        new_trajectory = trajectory
+        for i, points in enumerate(trajectory[:, 0]):
+            new_trajectory[i, 0] -= offset_x
+            new_trajectory[i, 1] -= offset_y
+        return new_trajectory
 
     def find_flat_part(self, test_trajectory):
 
@@ -122,8 +132,10 @@ if __name__ == '__main__':
 
     trajectory_conf = np.array([0.4, 1, 2])
     conf_start = np.array([0, 0, 0])
-    max_step = BaseTrajectory(trajectory_conf, 0.01).max_step
-    trajectory = BaseTrajectory(trajectory_conf, 0.01).lane_change_base_trajectory(conf_start, max_step)
+    trajectory = BaseTrajectory(trajectory_conf, 0.01).lane_change_base_trajectory(conf_start, False)
+    plt.plot(trajectory[:, 0], trajectory[:, 1], 'r')
+    conf_start = trajectory[-1,:3]
+    trajectory = BaseTrajectory(trajectory_conf, 0.01).lane_change_base_trajectory(conf_start, True)
     plt.plot(trajectory[:, 0], trajectory[:, 1], 'g')
     plt.show()
 
