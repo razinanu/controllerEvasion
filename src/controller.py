@@ -11,9 +11,10 @@ import matplotlib.pyplot as plt
 
 
 class Controller(ParticleFilter):
-    def __init__(self, NewModel, isSecondeHalf, num_particles=5):
+    def __init__(self, NewModel, merging, num_particles=5):
 
         self.model = NewModel()
+
         # steer and speed
         x_dim = 2
         self.propagation_noise_var = [0.1, 0.1]
@@ -25,10 +26,10 @@ class Controller(ParticleFilter):
 
         # TODO max velocity
         # TODO min steer for lane-change and merging
-        if isSecondeHalf:
-            self.bounds = np.array([[0, 1], [0.1, 1.5]])
+        if merging:
+            self.bounds = np.array([[0, 1], [1, 1.5]])
         else:
-            self.bounds = np.array([[-1, 0], [1, 1.5]])
+            self.bounds = np.array([[-0.9, 0], [1, 1.5]])
 
 
         # initialize particle filter
@@ -161,7 +162,7 @@ class Controller(ParticleFilter):
         self.size = solution.shape[0]
         y_no_zero = np.trim_zeros(solution[:, 1])
         size = int(0.10 * y_no_zero.shape[0])
-        lateral_distance = np.mean(y_no_zero[-size:])
+        lateral_distance = np.abs(np.mean(y_no_zero[-size:]))
         x_no_zero = np.trim_zeros(solution[:, 0])
         size = int(0.10 * x_no_zero.shape[0])
         long_distance = np.mean(x_no_zero[-size:])
@@ -169,7 +170,8 @@ class Controller(ParticleFilter):
         diff = self.trajectory - solution
         distances_squared = (np.square(diff[:, 0]) + np.square(diff[:, 1]))
 
-        upper_bound_y = (self.lateral_offset) + 0.1
+        upper_bound_y = (self.lateral_offset) - 0.1
+
         lower_bound_y = 0.15
         upper_bound_x = self.long_offset + 0.1
 
@@ -184,12 +186,14 @@ class Controller(ParticleFilter):
 
 if __name__ == '__main__':
 
-    controller = Controller(NewModel, False)
+    controller = Controller(NewModel,False)
     trajectory_conf = np.array([0.5, 1.5, 2])
     conf_start = np.array([0, 0, 0])
-    conf_model = np.array([0, 0, 0, 0, 0, 0], dtype="float")
+    conf_model = np.array([0, 0, 0, 0.8, 0, 0], dtype="float")
     long_offset = basetrajectory.BaseTrajectory(trajectory_conf, 0.01).longitudinal_length/2
     trajectory = basetrajectory.BaseTrajectory(trajectory_conf, 0.01).lane_change_base_trajectory(conf_start, False)
+    #controller = Controller(NewModel,True)
+    #trajectory = basetrajectory.BaseTrajectory(trajectory_conf, 0.01).merging_base_trajectory(conf_start)
     steer, speed, time = controller.control(trajectory, conf_model, 0.01, 0.2, long_offset)
     plt.plot(trajectory[:, 0], trajectory[:, 1], 'g')
     plt.show()

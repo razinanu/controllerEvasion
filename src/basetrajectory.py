@@ -26,6 +26,7 @@ class BaseTrajectory:
         self.second_const = (2 * np.pi) / self.longitudinal_length
         self.max_step = int((0.5 * self.longitudinal_length)/dt)
         self.dt = dt
+        self.lateral = traj_config[0]
         #TODO set the actuell velocity
         self.velocity = traj_config[1]
 
@@ -117,6 +118,27 @@ class BaseTrajectory:
             new_trajectory[i, 1] -= offset_y
         return new_trajectory
 
+    def merging_base_trajectory(self, x_start):
+
+
+        steps = self.max_step
+        # store trajectory
+        traj = np.zeros(shape=(steps+1, 3))
+        # set start point
+        traj[0, :] = x_start
+        for i in xrange(1, steps+1):
+            traj[i, :] = np.array(self.traj_merg_fcn(traj[i-1, :], self.dt, self.first_const, self.second_const))
+
+        return traj
+
+    def traj_merg_fcn(self, x, delta_t, y, z):
+
+        x0 = x[0] + delta_t
+        x1 = - (self.first_const*self.second_const*x0 - self.first_const * np.sin(self.second_const * x0))
+        dy = x1 - x[1]
+        x2 = np.arctan2(dy, delta_t)
+        return [x0, x1, x2]
+
     def find_flat_part(self, test_trajectory):
 
         flat_point = np.array([0, 0], dtype=float)
@@ -132,10 +154,11 @@ if __name__ == '__main__':
 
     trajectory_conf = np.array([0.4, 1, 2])
     conf_start = np.array([0, 0, 0])
-    trajectory = BaseTrajectory(trajectory_conf, 0.01).lane_change_base_trajectory(conf_start, False)
-    plt.plot(trajectory[:, 0], trajectory[:, 1], 'r')
-    conf_start = trajectory[-1, :3]
-    trajectory = BaseTrajectory(trajectory_conf, 0.01).lane_change_base_trajectory(conf_start, True)
+    #trajectory = BaseTrajectory(trajectory_conf, 0.01).lane_change_base_trajectory(conf_start, False)
+    #plt.plot(trajectory[:, 0], trajectory[:, 1], 'r')
+    # conf_start = trajectory[-1, :3]
+    # trajectory = BaseTrajectory(trajectory_conf, 0.01).lane_change_base_trajectory(conf_start, True)
+    trajectory = BaseTrajectory(trajectory_conf, 0.01).merging_base_trajectory(conf_start)
     plt.plot(trajectory[:, 0], trajectory[:, 1], 'g')
     plt.show()
 
