@@ -20,7 +20,8 @@ class FSM(Fysom):
                           ]
                       }
         super(FSM, self).__init__(fsm_config, *args, **kwargs)
-        print self.current
+        # print self.isstate("right")
+        # print self.current
 
 if __name__ == '__main__':
     FSM()
