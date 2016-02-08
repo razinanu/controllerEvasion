@@ -29,7 +29,7 @@ class Controller(ParticleFilter):
         if merging:
             self.bounds = np.array([[0, 1], [1, 1.5]])
         else:
-            self.bounds = np.array([[-0.9, 0], [1, 1.5]])
+            self.bounds = np.array([[-0.3, 0], [1, 1.5]])
 
 
         # initialize particle filter
@@ -93,7 +93,7 @@ class Controller(ParticleFilter):
         interp_y = interpolate.interp1d(solution[:, 0], solution[:, 1], bounds_error=False)
         interp_orientation = interpolate.interp1d(solution[:, 0], solution[:, 2], bounds_error=False)
 
-        resampled = np.zeros_like(trajectory)
+        resampled = np.zeros_like(self.trajectory)
 
         for k, x in enumerate(self.trajectory[:, 0]):
 

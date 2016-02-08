@@ -10,12 +10,12 @@ class FSM(Fysom):
     def __init__(self, *args, **kwargs):
         fsm_config = {'initial': 'right',
                       'events': [
-                          ('lane_change', 'right', 'first_lane_change'),
-                          ('back_steer_left', 'first_lane_change', 'second_lane_change'),
-                          ('complete_left', 'second_lane_change', 'left'),
-                          ('merging', 'left', 'first_merging'),
-                          ('back_steer_right', 'first_merging', 'second_merging'),
-                          ('complete_right', 'second_merging', 'right'),
+                          ('lane_change', 'right', 'firstLaneChange'),
+                          ('back_steer_left', 'firstLaneChange', 'secondLaneChange'),
+                          ('complete_left', 'secondLaneChange', 'left'),
+                          ('merging', 'left', 'firstMerging'),
+                          ('back_steer_right', 'firstMerging', 'secondMerging'),
+                          ('complete_right', 'secondMerging', 'right'),
 
                           ]
                       }
