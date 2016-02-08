@@ -5,12 +5,14 @@ from ottocar_msgs.msg import Obstacle
 from std_msgs.msg import Float32
 from std_msgs.msg import Float64
 from std_msgs.msg import Int16
+from std_msgs.msg import Bool
 from ottocar_msgs.msg import controller_mode as Speed
 import numpy as np
 import fsm
 import stateMachineObstacle
 import evading_controller
 from time import time
+
 
 
 mode_obstacle = stateMachineObstacle.stateMachineObstacle()
@@ -26,6 +28,8 @@ class ControllerEvasion:
              rospy.Subscriber("/sw/sensors/fusion/obstacle_front", Obstacle, self.obstacle_callback)
              self.pub_angle = rospy.Publisher('/hw/steering', Float32, tcp_nodelay=True, queue_size=1)
              self.pub_speed = rospy.Publisher('/hw/motor/speed', Speed, tcp_nodelay=True, queue_size=1)
+             self.pub_blink_right = rospy.Publisher('/sw/blinker/right', Bool, queue_size=1)
+             self.pub_blink_left = rospy.Publisher('/sw/blinker/left', Bool, queue_size=1)
 
              self.lane_controller = evading_controller.EvadingControllerLane()
              #self.lane_controller.config["reference_trajectory_offset_x"] = 0.2
@@ -38,29 +42,31 @@ class ControllerEvasion:
 
                 if mode_traj.current == "right" and mode_obstacle.current == "free" :
                         steer, speed = self.lane_controller.control_steer_and_speed()
-                        #print "drive"
+                        print "drive"
                         self.lane_controller_publisher(steer, speed)
                 if mode_traj.current == "left" and mode_obstacle.current == "free":
                         steer, speed = self.lane_controller.control_steer_and_speed()
-                        #print "drive"
+                        print "drive"
                         self.lane_controller_publisher(steer, speed)
                 if mode_obstacle.current == 'firstObstacle' or mode_obstacle.current == 'testObstacle':
                         self.slow_down
-                        #print "slow down"
+                        print "slow down"
                 if mode_obstacle.current == 'confirmedObstacle' and mode_traj.current == 'right':
                         mode_traj.lane_change()
-                        #print "lane change"
+                        print "lane change"
                         steer_lane_change, speed_lane_change, time_lane_change, start_time_lane_change = self.lane_change()
-                        print "steer, speed, time , starttime", steer_lane_change, speed_lane_change, time_lane_change, start_time_lane_change
+                        #print "steer, speed, time , starttime", steer_lane_change, speed_lane_change, time_lane_change, start_time_lane_change
                 if mode_traj.current == "firstLaneChange":
+                        self.pub_blink_left.publish(True)
                         start_time_lane_change_back = self.lane_change_publisher(steer_lane_change, speed_lane_change, time_lane_change, start_time_lane_change)
                 if mode_traj.current == "secondLaneChange":
                         self.back_lane_change(start_time_lane_change_back)
                 if mode_traj.current == "left" and mode_obstacle.current == 'confirmedObstacle':
                         mode_traj.merging()
-                        #print "merging "
+                        print "merging "
                         steer_mergin, speed_merging, time_merging, start_merging = self.merging()
                 if mode_traj.current == "firstMerging":
+                        self.pub_blink_left.publish(True)
                         start_time_merging_back = self.merging_publisher(steer_mergin, speed_merging, time_merging, start_merging, start_merging)
                 if mode_traj.current == "secondMerging":
                          self.back_merging(start_time_merging_back)
