@@ -29,38 +29,44 @@ class ControllerEvasion:
 
              self.lane_controller = evading_controller.EvadingControllerLane()
              #self.lane_controller.config["reference_trajectory_offset_x"] = 0.2
+             self.rate = rospy.Rate(300)
              self.spin()
+
 
         def spin(self):
             while not rospy.is_shutdown():
 
                 if mode_traj.current == "right" and mode_obstacle.current == "free" :
                         steer, speed = self.lane_controller.control_steer_and_speed()
-                        print "drive"
+                        #print "drive"
                         self.lane_controller_publisher(steer, speed)
                 if mode_traj.current == "left" and mode_obstacle.current == "free":
                         steer, speed = self.lane_controller.control_steer_and_speed()
-                        print "drive"
+                        #print "drive"
                         self.lane_controller_publisher(steer, speed)
                 if mode_obstacle.current == 'firstObstacle' or mode_obstacle.current == 'testObstacle':
                         self.slow_down
-                        print "slow down"
+                        #print "slow down"
                 if mode_obstacle.current == 'confirmedObstacle' and mode_traj.current == 'right':
                         mode_traj.lane_change()
-                        print "lane change"
+                        #print "lane change"
                         steer_lane_change, speed_lane_change, time_lane_change, start_time_lane_change = self.lane_change()
+                        print "steer, speed, time , starttime", steer_lane_change, speed_lane_change, time_lane_change, start_time_lane_change
                 if mode_traj.current == "firstLaneChange":
                         start_time_lane_change_back = self.lane_change_publisher(steer_lane_change, speed_lane_change, time_lane_change, start_time_lane_change)
                 if mode_traj.current == "secondLaneChange":
                         self.back_lane_change(start_time_lane_change_back)
                 if mode_traj.current == "left" and mode_obstacle.current == 'confirmedObstacle':
                         mode_traj.merging()
-                        print "merging "
+                        #print "merging "
                         steer_mergin, speed_merging, time_merging, start_merging = self.merging()
                 if mode_traj.current == "firstMerging":
                         start_time_merging_back = self.merging_publisher(steer_mergin, speed_merging, time_merging, start_merging, start_merging)
                 if mode_traj.current == "secondMerging":
                          self.back_merging(start_time_merging_back)
+                self.rate.sleep()
+
+
 
 
         def back_merging(self, start_time_back):
@@ -73,7 +79,7 @@ class ControllerEvasion:
                 # print "time back ", time(), 'diff back', time() - start_time_back
                 mode_traj.complete_right()
                 mode_obstacle.finish()
-                print "finish second merging"
+                #print "finish second merging"
 
         def merging_publisher(self, steer_mergin, speed_merging, time_merging, start_merging,start_time_merging):
 
@@ -86,7 +92,7 @@ class ControllerEvasion:
                     # print "time ", time(), 'diff', time() - start_time
                     mode_traj.back_steer_right()
                     start_time_back = time()
-                    print "finish merging"
+                    #print "finish merging"
                     return start_time_back
 
         def merging(self):
@@ -115,7 +121,7 @@ class ControllerEvasion:
                 # print "time back ", time(), 'diff back', time() - start_time_back
                 mode_traj.complete_left()
                 mode_obstacle.finish()
-                print "finish second lane change"
+                #print "finish second lane change"
                 #print mode_obstacle.current
 
 
@@ -135,8 +141,7 @@ class ControllerEvasion:
                 speed = 80
                 time_lane_change = 1
                 return steer, speed, time_lane_change, start_time_lane_change
-
-        def lane_change_publisher(self, speed, steer, time_lane_change, start_time):
+        def lane_change_publisher(self, steer, speed, time_lane_change, start_time):
 
                 # print "start_time publisher", start_time
                 # print "time ", time(), 'diff', time() - start_time
@@ -145,11 +150,11 @@ class ControllerEvasion:
                     self.pub_speed.publish(Speed(mode=Int16(0), value=Float64(speed)))
 
                 else:
-                    print "start_time publisher", start_time
-                    print "time ", time(), 'diff', time() - start_time
+                    #print "start_time publisher", start_time
+                    #print "time ", time(), 'diff', time() - start_time
                     mode_traj.back_steer_left()
                     start_time_back = time()
-                    print "finish first lane change"
+                    #print "finish first lane change"
                     return start_time_back
 
 
@@ -171,7 +176,7 @@ class ControllerEvasion:
             if msg.point_left.x and mode_obstacle.current == "free":
                 obstacle_x = msg.point_left.x
                 obstacle_y = np.abs(msg.point_left.y)
-                print mode_obstacle.current
+                #print mode_obstacle.current
 
                 if obstacle_x:
                     self.first_obstacle = (obstacle_x, obstacle_y)
@@ -179,12 +184,12 @@ class ControllerEvasion:
                 return
             if mode_obstacle.current == "firstObstacle":
                 diff = self.first_obstacle[0] - msg.point_left.x
-                print"diff, obstacle", diff, self.first_obstacle[0], msg.point_left.x
+                #print"diff, obstacle", diff, self.first_obstacle[0], msg.point_left.x
 
                 if diff >= 0:
                     self.test_obstacle = (msg.point_left.x, np.abs(msg.point_left.y))
                     mode_obstacle.test()
-                    print mode_obstacle.current
+                    #print mode_obstacle.current
                 else:
                     mode_obstacle.searchNext()
                 return
@@ -194,7 +199,7 @@ class ControllerEvasion:
                 if diff > 0:
                     self.confirmed_obstacle = (msg.point_left.x, np.abs(msg.point_left.y))
                     mode_obstacle.confirm()
-                    print self.confirmed_obstacle
+                    #print self.confirmed_obstacle
 
 
                 else:
@@ -205,8 +210,6 @@ class ControllerEvasion:
 if __name__ == '__main__':
 
     rospy.init_node('controller_evasion')
-    #rate = rospy.Rate(300)
-
     try:
         CE = ControllerEvasion()
     except rospy.ROSInterruptException : pass
