@@ -16,7 +16,6 @@ class FSM(Fysom):
                           ('merging', 'left', 'firstMerging'),
                           ('back_steer_right', 'firstMerging', 'secondMerging'),
                           ('complete_right', 'secondMerging', 'right'),
-
                           ]
                       }
         super(FSM, self).__init__(fsm_config, *args, **kwargs)
