@@ -1,4 +1,4 @@
-# !/usr/bin/env python2
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 import rospy
 from ottocar_msgs.msg import Obstacle
@@ -120,8 +120,9 @@ class ControllerEvasion:
         def back_lane_change(self, start_time_back):
 
             if time() - start_time_back < 1:
-                self.pub_angle.publish(0.2)
-                self.pub_speed.publish(Speed(mode=Int16(0), value=Float64(80)))
+                self.pub_angle.publish(0.5)
+                self.pub_speed.publish(Speed(mode=Int16(0), 
+value=Float64(75)))
             else:
                 # print "start time back ", start_time_back
                 # print "time back ", time(), 'diff back', time() - start_time_back
@@ -144,7 +145,7 @@ class ControllerEvasion:
                 start_time_lane_change = time()
                 #print "start time lane change", start_time_lane_change
                 steer = -0.2
-                speed = 80
+                speed = 75
                 time_lane_change = 1
                 return steer, speed, time_lane_change, start_time_lane_change
         def lane_change_publisher(self, steer, speed, time_lane_change, start_time):
@@ -167,7 +168,8 @@ class ControllerEvasion:
 
         def slow_down(self):
 
-            self.pub_speed.publish(Speed(mode=Int16(0), value=Float64(75)))
+            self.pub_speed.publish(Speed(mode=Int16(0), 
+value=Float64(74)))
             self.pub_angle.publish(0.2)
 
 
