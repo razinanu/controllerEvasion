@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 from __future__ import division
 import numpy as np
-import math as math
+import math
 import matplotlib.pyplot as plt
 
 
@@ -22,8 +22,8 @@ class BaseTrajectory:
         self.inflection_error = 0.005
         self.flat_error = 0.001
         self.longitudinal_length = traj_config[1] * (math.sqrt((2*math.pi * traj_config[0]) / traj_config[2]))
-        self.first_const = traj_config[0] / (2 * np.pi)
-        self.second_const = (2 * np.pi) / self.longitudinal_length
+        self.first_const = traj_config[0] / (2 * math.pi)
+        self.second_const = (2 * math.pi) / self.longitudinal_length
         self.max_step = int((0.5 * self.longitudinal_length)/dt)
         self.dt = dt
         self.lateral = traj_config[0]
@@ -50,8 +50,8 @@ class BaseTrajectory:
         inflection_point = np.zeros(shape=(2, 2), dtype=float)
         flat_part = np.zeros(shape=(1, 2), dtype=float)
         trajectory = np.zeros(shape=(step, 2), dtype=float)
-        y = trajectory_config[0] / 2 * np.pi
-        z = (2 * np.pi) / longitudinal
+        y = trajectory_config[0] / 2 * math.pi
+        z = (2 * math.pi) / longitudinal
         c = 0
         j = 0
         t = 0
