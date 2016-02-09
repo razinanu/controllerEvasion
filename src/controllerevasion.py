@@ -32,7 +32,7 @@ class ControllerEvasion:
              self.pub_blink_left = rospy.Publisher('/sw/blinker/left', Bool, queue_size=1)
 
              self.lane_controller = evading_controller.EvadingControllerLane()
-             #self.lane_controller.config["reference_trajectory_offset_x"] = 0.2
+             self.lane_controller.config["v_max"] = 80
              self.rate = rospy.Rate(300)
              self.spin()
 
