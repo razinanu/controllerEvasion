@@ -12,6 +12,8 @@ import fsm
 import stateMachineObstacle
 import evading_controller
 from time import time
+#TODo
+#componets
 
 
 
@@ -32,7 +34,6 @@ class ControllerEvasion:
              self.pub_blink_left = rospy.Publisher('/sw/blinker/left', Bool, queue_size=1)
 
              self.lane_controller = evading_controller.EvadingControllerLane()
-            # self.lane_controller.config["v_max"] = 70
              self.slow_down_counter = 0
              self.rate = rospy.Rate(300)
              self.spin()
@@ -47,13 +48,14 @@ class ControllerEvasion:
                         print "drive"
                         self.lane_controller_publisher(steer, speed)
                 if mode_traj.current == "left" and mode_obstacle.current == "free":
-                        #self.lane_controller.config["v_max"] = 70
                         steer, speed = self.lane_controller.control_steer_and_speed()
                         print "drive"
                         self.lane_controller_publisher(steer, speed)
                 if mode_obstacle.current == 'firstObstacle' or mode_obstacle.current == 'testObstacle':
                         if self.slow_down_counter > 20:
+                            print "free with slow down"
                             mode_obstacle.current = "free"
+                            self.slow_down_counter =0
                         else:
                             self.slow_down_counter += 1
                             self.slow_down()
@@ -75,15 +77,11 @@ class ControllerEvasion:
                 if mode_traj.current =="left" and time()-start_time_left > 4:
                         mode_traj.controllerBack()
                 if mode_traj.current == "firstMerging":
-
                         self.pub_blink_left.publish(True)
                         start_time_merging_back = self.merging_publisher(steer_mergin, speed_merging, time_merging, start_merging, start_merging)
                 if mode_traj.current == "secondMerging":
                          self.back_merging(start_time_merging_back)
                 self.rate.sleep()
-
-
-
 
         def back_merging(self, start_time_back):
 
@@ -155,7 +153,7 @@ class ControllerEvasion:
                 # self.run_time = time()
                 start_time_lane_change = time()
                 #print "start time lane change", start_time_lane_change
-                steer = -0.2
+                steer = - 0.2
                 speed = 75
                 time_lane_change = 1
                 return steer, speed, time_lane_change, start_time_lane_change
@@ -194,7 +192,7 @@ class ControllerEvasion:
             if msg.point_left.x and mode_obstacle.current == "free":
                 obstacle_x = msg.point_left.x
                 obstacle_y = np.abs(msg.point_left.y)
-                #print mode_obstacle.current
+
 
                 if obstacle_x:
                     self.first_obstacle = (obstacle_x, obstacle_y)
@@ -207,7 +205,7 @@ class ControllerEvasion:
                 if diff >= 0:
                     self.test_obstacle = (msg.point_left.x, np.abs(msg.point_left.y))
                     mode_obstacle.test()
-                    #print mode_obstacle.current
+
                 else:
                     mode_obstacle.searchNext()
                 return
@@ -217,9 +215,6 @@ class ControllerEvasion:
                 if diff > 0:
                     self.confirmed_obstacle = (msg.point_left.x, np.abs(msg.point_left.y))
                     mode_obstacle.confirm()
-                    #print self.confirmed_obstacle
-
-
                 else:
                     mode_obstacle.reject()
 
