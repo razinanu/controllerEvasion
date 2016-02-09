@@ -51,7 +51,7 @@ class ControllerEvasion:
                         print "drive"
                         self.lane_controller_publisher(steer, speed)
                 if mode_obstacle.current == 'firstObstacle' or mode_obstacle.current == 'testObstacle':
-                        self.slow_down
+                        self.slow_down()
                         print "slow down"
                 if mode_obstacle.current == 'confirmedObstacle' and mode_traj.current == 'right':
                         mode_traj.lane_change()
@@ -62,12 +62,15 @@ class ControllerEvasion:
                         self.pub_blink_left.publish(True)
                         start_time_lane_change_back = self.lane_change_publisher(steer_lane_change, speed_lane_change, time_lane_change, start_time_lane_change)
                 if mode_traj.current == "secondLaneChange":
-                        self.back_lane_change(start_time_lane_change_back)
+                        start_time_left =self.back_lane_change(start_time_lane_change_back)
                 if mode_traj.current == "left" and mode_obstacle.current == 'confirmedObstacle':
                         mode_traj.merging()
                         print "merging "
                         steer_mergin, speed_merging, time_merging, start_merging = self.merging()
+                if mode_traj.current =="left" and time()-start_time_left > 5:
+                        mode_traj.controllerBack()
                 if mode_traj.current == "firstMerging":
+
                         self.pub_blink_left.publish(True)
                         start_time_merging_back = self.merging_publisher(steer_mergin, speed_merging, time_merging, start_merging, start_merging)
                 if mode_traj.current == "secondMerging":
@@ -129,6 +132,8 @@ class ControllerEvasion:
                 # print "time back ", time(), 'diff back', time() - start_time_back
                 mode_traj.complete_left()
                 mode_obstacle.finish()
+                start_time_left = time()
+                return start_time_left
                 #print "finish second lane change"
                 #print mode_obstacle.current
 
