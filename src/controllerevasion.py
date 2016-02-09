@@ -32,7 +32,7 @@ class ControllerEvasion:
              self.pub_blink_left = rospy.Publisher('/sw/blinker/left', Bool, queue_size=1)
 
              self.lane_controller = evading_controller.EvadingControllerLane()
-             self.lane_controller.config["v_max"] = 80
+             self.lane_controller.config["v_max"] = 76
              self.rate = rospy.Rate(300)
              self.spin()
 
@@ -78,8 +78,8 @@ class ControllerEvasion:
         def back_merging(self, start_time_back):
 
             if time() - start_time_back < 1:
-                self.pub_angle.publish(-0.2)
-                self.pub_speed.publish(Speed(mode=Int16(0), value=Float64(80)))
+                self.pub_angle.publish(-0.4)
+                self.pub_speed.publish(Speed(mode=Int16(0), value=Float64(75)))
             else:
                 # print "start time back ", start_time_back
                 # print "time back ", time(), 'diff back', time() - start_time_back
@@ -113,7 +113,7 @@ class ControllerEvasion:
                 start_time_merging = time()
                 #print "start time lane change", start_time_lane_change
                 steer = 0.2
-                speed = 80
+                speed = 75
                 time_merging = 1
                 return steer, speed, time_merging, start_time_merging
 
@@ -121,8 +121,7 @@ class ControllerEvasion:
 
             if time() - start_time_back < 1:
                 self.pub_angle.publish(0.5)
-                self.pub_speed.publish(Speed(mode=Int16(0), 
-value=Float64(75)))
+                self.pub_speed.publish(Speed(mode=Int16(0), value=Float64(75)))
             else:
                 # print "start time back ", start_time_back
                 # print "time back ", time(), 'diff back', time() - start_time_back
@@ -168,8 +167,7 @@ value=Float64(75)))
 
         def slow_down(self):
 
-            self.pub_speed.publish(Speed(mode=Int16(0), 
-value=Float64(74)))
+            self.pub_speed.publish(Speed(mode=Int16(0), value=Float64(74)))
             self.pub_angle.publish(0.2)
 
 
