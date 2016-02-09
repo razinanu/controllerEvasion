@@ -33,6 +33,7 @@ class ControllerEvasion:
 
              self.lane_controller = evading_controller.EvadingControllerLane()
             # self.lane_controller.config["v_max"] = 70
+             self.slow_down_counter = 0
              self.rate = rospy.Rate(300)
              self.spin()
 
@@ -40,7 +41,7 @@ class ControllerEvasion:
         def spin(self):
             while not rospy.is_shutdown():
 
-                if mode_traj.current == "right" and mode_obstacle.current == "free" :
+                if mode_traj.current == "right" and mode_obstacle.current == "free":
                        # self.lane_controller.config["v_max"] = 70
                         steer, speed = self.lane_controller.control_steer_and_speed()
                         print "drive"
@@ -51,7 +52,11 @@ class ControllerEvasion:
                         print "drive"
                         self.lane_controller_publisher(steer, speed)
                 if mode_obstacle.current == 'firstObstacle' or mode_obstacle.current == 'testObstacle':
-                        self.slow_down()
+                        if self.slow_down_counter > 20:
+                            mode_obstacle.current = "free"
+                        else:
+                            self.slow_down_counter += 1
+                            self.slow_down()
                         print "slow down"
                 if mode_obstacle.current == 'confirmedObstacle' and mode_traj.current == 'right':
                         mode_traj.lane_change()
@@ -67,7 +72,7 @@ class ControllerEvasion:
                         mode_traj.merging()
                         print "merging "
                         steer_mergin, speed_merging, time_merging, start_merging = self.merging()
-                if mode_traj.current =="left" and time()-start_time_left > 5:
+                if mode_traj.current =="left" and time()-start_time_left > 4:
                         mode_traj.controllerBack()
                 if mode_traj.current == "firstMerging":
 

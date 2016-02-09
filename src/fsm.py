@@ -14,6 +14,7 @@ class FSM(Fysom):
                           ('back_steer_left', 'firstLaneChange', 'secondLaneChange'),
                           ('complete_left', 'secondLaneChange', 'left'),
                           ('merging', 'left', 'firstMerging'),
+                          ('controllerBack', 'left', 'right'),
                           ('back_steer_right', 'firstMerging', 'secondMerging'),
                           ('complete_right', 'secondMerging', 'right'),
                           ]
