@@ -32,7 +32,7 @@ class ControllerEvasion:
              self.pub_blink_left = rospy.Publisher('/sw/blinker/left', Bool, queue_size=1)
 
              self.lane_controller = evading_controller.EvadingControllerLane()
-             self.lane_controller.config["v_max"] = 70
+            # self.lane_controller.config["v_max"] = 70
              self.rate = rospy.Rate(300)
              self.spin()
 
@@ -41,12 +41,12 @@ class ControllerEvasion:
             while not rospy.is_shutdown():
 
                 if mode_traj.current == "right" and mode_obstacle.current == "free" :
-                        self.lane_controller.config["v_max"] = 70
+                       # self.lane_controller.config["v_max"] = 70
                         steer, speed = self.lane_controller.control_steer_and_speed()
                         print "drive"
                         self.lane_controller_publisher(steer, speed)
                 if mode_traj.current == "left" and mode_obstacle.current == "free":
-                        self.lane_controller.config["v_max"] = 70
+                        #self.lane_controller.config["v_max"] = 70
                         steer, speed = self.lane_controller.control_steer_and_speed()
                         print "drive"
                         self.lane_controller_publisher(steer, speed)
