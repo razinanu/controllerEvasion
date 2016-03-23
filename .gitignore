@@ -49,3 +49,12 @@ crashlytics-build.properties
 fabric.properties
 
 ControllerConfig.py
+
+cfg/cpp/controller_evasion/ControllerConfig.h
+src/controller_evasion/cfg/ControllerConfig.py
+src/controller_evasion/cfg/__init__.py
+src/controller_evasion/__init__.py
+docs/ControllerConfig-usage.dox
+docs/ControllerConfig.dox
+docs/ControllerConfig.wikidoc
+
