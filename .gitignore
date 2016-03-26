@@ -58,3 +58,4 @@ docs/ControllerConfig-usage.dox
 docs/ControllerConfig.dox
 docs/ControllerConfig.wikidoc
 
+*.pyc
