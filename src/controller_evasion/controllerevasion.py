@@ -1,17 +1,20 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
+import numpy as np
+from time import time
+
 import rospy
-from ottocar_msgs.msg import Obstacle
+from std_msgs.msg import Bool
 from std_msgs.msg import Float32
 from std_msgs.msg import Float64
 from std_msgs.msg import Int16
-from std_msgs.msg import Bool
-from ottocar_msgs.msg import controller_mode as Speed
-import numpy as np
+
+import evading_controller
 import fsm
 import stateMachineObstacle
-import evading_controller
-from time import time
+from ottocar_msgs.msg import Obstacle
+from ottocar_msgs.msg import controller_mode as Speed
+
 #TODo
 #componets
 

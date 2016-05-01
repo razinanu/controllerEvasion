@@ -1,14 +1,15 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+from common import Reconfigurable
 from components import Control,Trajectory,CurrentYawRate,CurrentSpeed,TargetTrajectory,SpeedControl
-from common import Lockable,Reconfigurable
-import ControllerConfig
+from controller_evasion import ControllerConfig
+
 
 class EvadingControllerLane(Reconfigurable,Control,Trajectory,CurrentYawRate,CurrentSpeed,TargetTrajectory, SpeedControl):
     def __init__(self,*args,**kwargs):
         self.params_changed_callbacks = list()
-        super(EvadingControllerLane,self).__init__(ControllerConfig,"config.json",*args,**kwargs)
+        super(EvadingControllerLane,self).__init__(ControllerConfig, "config.json", *args, **kwargs)
         self.params_changed()
 
     def params_changed(self): # called by Reconfigurable

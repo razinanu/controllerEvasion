@@ -1,13 +1,15 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-from common import ParticleFilter
 import numpy as np
-from motion_model import NewModel
-from funcy import partial
-import basetrajectory
 from itertools import starmap
-from scipy import interpolate
+
 import matplotlib.pyplot as plt
+from funcy import partial
+from scipy import interpolate
+
+from common import ParticleFilter
+from controller_evasion import basetrajectory
+from motion_model import NewModel
 
 
 class Controller(ParticleFilter):
@@ -190,7 +192,7 @@ if __name__ == '__main__':
     trajectory_conf = np.array([0.5, 1.5, 2])
     conf_start = np.array([0, 0, 0])
     conf_model = np.array([0, 0, 0, 0.8, 0, 0], dtype="float")
-    long_offset = basetrajectory.BaseTrajectory(trajectory_conf, 0.01).longitudinal_length/2
+    long_offset = basetrajectory.BaseTrajectory(trajectory_conf, 0.01).longitudinal_length / 2
     trajectory = basetrajectory.BaseTrajectory(trajectory_conf, 0.01).lane_change_base_trajectory(conf_start, False)
     #controller = Controller(NewModel,True)
     #trajectory = basetrajectory.BaseTrajectory(trajectory_conf, 0.01).merging_base_trajectory(conf_start)
