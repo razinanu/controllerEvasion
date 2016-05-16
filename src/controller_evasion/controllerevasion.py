@@ -9,11 +9,13 @@ from std_msgs.msg import Float32
 from std_msgs.msg import Float64
 from std_msgs.msg import Int16
 
-import evading_controller
+from controller_lane import cfg
+#import evading_controller
 import fsm
 import stateMachineObstacle
 from ottocar_msgs.msg import Obstacle
 from ottocar_msgs.msg import controller_mode as Speed
+from car import Car
 
 #TODo
 #componets
@@ -28,32 +30,31 @@ class ControllerEvasion:
 
 
         def __init__(self):
-
+             #self.car = Car()
              print "controller_evasion started"
-             rospy.Subscriber("/sw/sensors/fusion/obstacle_front", Obstacle, self.obstacle_callback)
+             rospy.Subscriber("sw/sensors/fusion/obstacle_front", Obstacle, self.obstacle_callback)
              self.pub_angle = rospy.Publisher('/hw/steering', Float32, tcp_nodelay=True, queue_size=1)
              self.pub_speed = rospy.Publisher('/hw/motor/speed', Speed, tcp_nodelay=True, queue_size=1)
              self.pub_blink_right = rospy.Publisher('/sw/blinker/right', Bool, queue_size=1)
              self.pub_blink_left = rospy.Publisher('/sw/blinker/left', Bool, queue_size=1)
 
-             self.lane_controller = evading_controller.EvadingControllerLane()
+             #self.lane_controller = evading_controller.EvadingControllerLane()
              self.slow_down_counter = 0
              self.rate = rospy.Rate(300)
              self.spin()
-
 
         def spin(self):
             while not rospy.is_shutdown():
 
                 if mode_traj.current == "right" and mode_obstacle.current == "free":
                        # self.lane_controller.config["v_max"] = 70
-                        steer, speed = self.lane_controller.control_steer_and_speed()
+                        #steer, speed = self.lane_controller.control_steer_and_speed()
                         print "drive"
-                        self.lane_controller_publisher(steer, speed)
+                        #self.lane_controller_publisher(steer, speed)
                 if mode_traj.current == "left" and mode_obstacle.current == "free":
-                        steer, speed = self.lane_controller.control_steer_and_speed()
+                        #steer, speed = self.lane_controller.control_steer_and_speed()
                         print "drive"
-                        self.lane_controller_publisher(steer, speed)
+                        #self.lane_controller_publisher(steer, speed)
                 if mode_obstacle.current == 'firstObstacle' or mode_obstacle.current == 'testObstacle':
                         if self.slow_down_counter > 20:
                             print "free with slow down"

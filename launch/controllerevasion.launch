@@ -3,6 +3,6 @@
 <node pkg="ir_perception" type="transform_IR.py" name="transformation" />
 <node pkg="sensor_fusion" type="fusion_hack4.py" name="fusion" />
 -->
-<node pkg="controller_evasion" type="controller_evasion.py" name="evasion" output="screen"/>
+<node pkg="controller_evasion" type="controllerevasion.py" name="evasion" output="screen"/>
 
 </launch>
