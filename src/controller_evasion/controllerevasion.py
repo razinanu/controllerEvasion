@@ -9,7 +9,7 @@ from std_msgs.msg import Float32
 from std_msgs.msg import Float64
 from std_msgs.msg import Int16
 
-from controller_lane import cfg
+#from controller_lane import cfg
 #import evading_controller
 import fsm
 import stateMachineObstacle
