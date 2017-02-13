@@ -19,3 +19,4 @@ class EvadingControllerLane(Reconfigurable,Control,Trajectory,CurrentYawRate,Cur
 
     def notice_trajectory(self):
         pass
+

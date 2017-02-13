@@ -1,5 +1,3 @@
-
-
 from math import *
 NT = float
 
@@ -148,7 +146,7 @@ def plot_bezier(bezier, n):
         t += eps
         bezier_curve[i, 0] = p.x
         bezier_curve[i, 1] = p.y
-    plot(bezier_curve[:,0], bezier_curve[:,1])
+    plot(bezier_curve[:,0], bezier_curve[:,1], 'ro')
     return bezier_curve
 
 
@@ -163,8 +161,11 @@ def demo(vp):
 
     bc = Bezier(vp)
 
+
         #plotCP(vp)
     bezier_curve = plot_bezier(bc, 100)
+    print bezier_curve
+    
     show()
 
     return bezier_curve
@@ -173,6 +174,8 @@ if __name__ == "__main__":
     a=1
     b=1
     c=0.6
-    vp = [pt(0, 0), pt(0.6, 0), pt(a, b), pt((2*a)-c, 2*b), pt(2*a, 2*b)]
+    vp = [pt(0, 0), pt(0.6, 0), pt(a, b), pt(a, 2*b), pt(a, 2*b+5)]
+   # vp = [pt(0, 0), pt(0.6, 0), pt(a, b), pt((2*a)-c, 2*b), pt(2*a, 2*b)]
+    #vp = [pt(0, 0), pt(0.6, 0), pt(a, b)]
     #vp = [pt(0, 0), pt(0.6, 0), pt(a, b)]
     demo(vp)

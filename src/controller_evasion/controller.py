@@ -6,18 +6,24 @@ from itertools import starmap
 import matplotlib.pyplot as plt
 from funcy import partial
 from scipy import interpolate
+import bezierCurve as bz
+
 
 from common import ParticleFilter
 from controller_evasion import basetrajectory
-from motion_model import NewModel
+from motion_model import DataDrivenModel
+from motion_model import kinematic
+#from mpc import MPC
+#from car import Car
 
 
 class Controller(ParticleFilter):
     def __init__(self, NewModel, merging, num_particles=5):
 
-        self.model = NewModel()
+        self.model = DataDrivenModel()
+        #self.mpc = MPC_PF()
+        #self.car = Car()
 
-        # steer and speed
         x_dim = 2
         self.propagation_noise_var = [0.1, 0.1]
         self.propagation_noise = partial(lambda var, size:
@@ -28,10 +34,13 @@ class Controller(ParticleFilter):
 
         # TODO max velocity
         # TODO min steer for lane-change and merging
+        # steer and speed
         if merging:
-            self.bounds = np.array([[0, 1], [1, 1.5]])
+            # TODO set the value
+            self.bounds = np.array([[-1, 1], [1, 1.5]])
         else:
-            self.bounds = np.array([[-0.3, 0], [1, 1.5]])
+            self.bounds = np.array([[0, 1], [1, 3]])
+            #self.bounds = np.array([[-0.3, 0], [1, 1.5]])
 
 
         # initialize particle filter
@@ -39,13 +48,13 @@ class Controller(ParticleFilter):
                                          self.particle_propagation_fun, self.likelihood_fun,
                                          self.propagation_noise, self.observation_noise)
 
-    def control(self, trajectory, model_conf, dt, lateral_offset, long_offset, num_iterations=20):
+    def control(self, trajectory, model_conf, dt, steps, num_iterations=20):
 
-        self.lateral_offset = lateral_offset
-        self.long_offset = long_offset
+        #self.lateral_offset = lateral_offset
+        #self.long_offset = long_offset
         self.dt = dt
-        self.steps = trajectory.shape[0]
-        self.trajectory = trajectory
+        self.steps = steps
+        self.traj = trajectory
 
         self.solve_args = model_conf
 
@@ -65,10 +74,10 @@ class Controller(ParticleFilter):
         steer, speed = self.weighted_parameters()
 
         real_solution = self._solve(steer, speed)
-        #plt.plot(solution[:, 0], solution[:, 1], 'bo')
+        plt.plot(real_solution[:, 0], real_solution[:, 1], 'bo')
 
         solution = self._resample_solution(real_solution)
-        plt.plot(solution[:, 0], solution[:, 1], 'ro')
+        #plt.plot(solution[:, 0], solution[:, 1], 'ro')
 
         print "final position x: ", solution[-1, 0], "final position y: ", solution[-1, 1]
         size = solution.shape[0]
@@ -93,18 +102,14 @@ class Controller(ParticleFilter):
     def _resample_solution(self, solution):
 
         interp_y = interpolate.interp1d(solution[:, 0], solution[:, 1], bounds_error=False)
-        interp_orientation = interpolate.interp1d(solution[:, 0], solution[:, 2], bounds_error=False)
+        #interp_orientation = interpolate.interp1d(solution[:, 0], solution[:, 2], bounds_error=False)
+        resampled = np.zeros_like(self.traj)
 
-        resampled = np.zeros_like(self.trajectory)
-
-        for k, x in enumerate(self.trajectory[:, 0]):
-
+        for k, x in enumerate(self.traj[:, 0]):
             if x <= np.max(solution[:, 0]) and x >= np.min(solution[:, 0]):
-
                 resampled[k, 0] = x
                 resampled[k, 1] = interp_y(x)
-                resampled[k, 2] = interp_orientation(x)
-
+                #resampled[k, 2] = interp_orientation(x)
 
         return resampled
 
@@ -139,13 +144,18 @@ class Controller(ParticleFilter):
 
     def _solve(self, steer, speed):
 
+        solution = kinematic(self.steps,self.dt,0,0,0,speed,steer)
         self.solve_args[3] = speed
-        solution = self.model.solve(
-            self.steps,
-            self.dt,
-            steer,
-            speed,
-            *self.solve_args)
+        # solution = self.model.solve(
+        #     self.steps,
+        #     self.dt,
+        #     steer,
+        #     speed,
+        #     *self.solve_args)
+
+
+        plt.plot(solution[:, 0], solution[:, 1], 'ro')
+
         return solution
 
     def calc_distance(self, xy):
@@ -169,33 +179,47 @@ class Controller(ParticleFilter):
         size = int(0.10 * x_no_zero.shape[0])
         long_distance = np.mean(x_no_zero[-size:])
 
-        diff = self.trajectory - solution
+        diff = self.traj - solution
         distances_squared = (np.square(diff[:, 0]) + np.square(diff[:, 1]))
 
-        upper_bound_y = (self.lateral_offset) - 0.1
+        #upper_bound_y = (self.lateral_offset) - 0.1
 
-        lower_bound_y = 0.15
-        upper_bound_x = self.long_offset + 0.1
+        #lower_bound_y = 0.15
+        #upper_bound_x = self.long_offset + 0.1
 
-        if lateral_distance < upper_bound_y and lateral_distance > lower_bound_y \
-                and long_distance < upper_bound_x:
-            error = np.sqrt(distances_squared).mean()
-        else:
-            error = 20 * np.sqrt(distances_squared).mean()
+        #if lateral_distance < upper_bound_y and lateral_distance > lower_bound_y \
+               # and long_distance < upper_bound_x:
+            #error = np.sqrt(distances_squared).mean()
+        #else:
+        error = np.sqrt(distances_squared).mean()
 
         return error
 
 
 if __name__ == '__main__':
 
-    controller = Controller(NewModel,False)
+    controller = Controller(DataDrivenModel, False)
     trajectory_conf = np.array([0.5, 1.5, 2])
     conf_start = np.array([0, 0, 0])
-    conf_model = np.array([0, 0, 0, 0.8, 0, 0], dtype="float")
-    long_offset = basetrajectory.BaseTrajectory(trajectory_conf, 0.01).longitudinal_length / 2
-    trajectory = basetrajectory.BaseTrajectory(trajectory_conf, 0.01).lane_change_base_trajectory(conf_start, False)
+    #Model.solve(x_start = np.array([0,0,0,0,0,(start Gescheindigkeit in m/s),0]), u = (Servo im Bogenmass, Motordrehmoment), n_steps = 9000, dt = 0.001)
+    conf_model = np.array([0, 0, 2, 0.8, 0, 0], dtype="float")
+    vp = [bz.pt(0, 0), bz.pt(0.6, 0), bz.pt(1, 1)]
+    traj = bz.demo(vp)
+    #x, y, orientation, velocity, longitual_velocity, yaw_rate
+    #self.solve_args[3] = speed
+    steer = -0.23
+    speed = 100
+    step = 100
+    dt = 0.01
+    #controller.car.sensors.perception_trajectory.trajectory_arr = traj
+    plt.show()
+
+    #(steps, dt, control_steer, control_speed, x, y, orientation, velocity, longitual_velocity, yaw_rate)
+
+    #long_offset = basetrajectory.BaseTrajectory(trajectory_conf, 0.01).longitudinal_length / 2
+    #trajectory = basetrajectory.BaseTrajectory(trajectory_conf, 0.01).lane_change_base_trajectory(conf_start, False)
     #controller = Controller(NewModel,True)
     #trajectory = basetrajectory.BaseTrajectory(trajectory_conf, 0.01).merging_base_trajectory(conf_start)
-    steer, speed, time = controller.control(trajectory, conf_model, 0.01, 0.2, long_offset)
-    plt.plot(trajectory[:, 0], trajectory[:, 1], 'g')
-    plt.show()
+    #steer, speed, time = controller.control(traj, conf_model, 0.01, 100)
+    #plt.plot(traj[:, 0], traj[:, 1], 'g')
+    #plt.show()

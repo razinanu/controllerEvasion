@@ -40,7 +40,7 @@ class ControllerEvasion:
         self.car.controllers.mpc.enabled = True
         self.car.sensors.obstacle_detection.enabled =True
         print self.car.sensors.obstacle_detection.obst_front_x
-        self.obst_front()
+        self.update()
         self.car.spin()
 
 
@@ -53,6 +53,8 @@ class ControllerEvasion:
             self.car.actors.steer_servo.enabled = False
             self.car.controllers.mpc.enabled = False
             self.car.controllers.curvature_dependent_velocity.enabled = False
+    def update(self):
+        self.obst_front()
 
 
 if __name__ == '__main__':

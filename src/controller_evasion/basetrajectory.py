@@ -3,6 +3,7 @@ from __future__ import division
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+import bezierCurve as bz
 
 
 class BaseTrajectory:
@@ -88,6 +89,8 @@ class BaseTrajectory:
     """
     def lane_change_base_trajectory(self, x_start, isSecond):
 
+        vp = [bz.pt(0, 0), bz.pt(0.6, 0), bz.pt(1, 1)]
+        traj1 = bz.demo(vp)
 
         steps = self.max_step
         # store trajectory

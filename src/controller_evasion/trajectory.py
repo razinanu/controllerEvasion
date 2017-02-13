@@ -4,7 +4,10 @@ from __future__ import division
 import numpy as np
 
 import matplotlib.pyplot as plt
-import model as OdeModel
+#import sys
+#sys.path.insert(0, '../motion_model/src/motion_model')
+#import model.py as OdeModel
+import motion_model.new_model as OdeModel
 
 from controller_evasion import basetrajectory
 
@@ -18,11 +21,11 @@ class Trajectory:
         self.moment_max = 22.5
         self.servo_max = 0.35
         self.base_trajectory = basetrajectory.BaseTrajectory(base_trajectory_config)
-        self.min_velocity =5
+        self.min_velocity = 5
         self.max_velocity = 23
         self.min_servo = 1
         self.max_servo = 3
-        self.min_step=5
+        self.min_step = 5
 
     def lane_change_trajectory(self, conf_start, start_servo, start_moment):
 
@@ -72,7 +75,7 @@ class Trajectory:
         print "max is", max_x
         print "max_servo", max_servo
         print "max_vel", velocity_max
-        print "max_step",max_step
+        print "max_step", max_step
 
         plt.plot(bestTryjectory[:, 0], bestTryjectory[:, 1], 'bo')
         return solution
